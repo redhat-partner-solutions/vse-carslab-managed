@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: workload-clusters
+  name: components-workload-clusters
   namespace: openshift-gitops
 spec:
   generators:
