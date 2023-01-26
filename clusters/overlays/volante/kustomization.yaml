@@ -3,6 +3,48 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../../components/apps/rwn-optimizations
-  - ../../../components/apps/openshift-sriov-network-operator/overlays/default
-  - ../../../components/apps/openshift-ptp/overlays/default
+  - github.com/redhat-partner-solutions/vse-catalog/components/apps/openshift-sriov-network-operator/overlays/4.10?ref=main
+  - github.com/redhat-partner-solutions/vse-catalog/components/apps/openshift-ptp/overlays/stable?ref=main
+  - github.com/redhat-partner-solutions/vse-catalog/components/configs/rwn-optimizations/base/3-node?ref=main
+
+patches:
+  - target:
+      kind: SriovOperatorConfig
+      name: default
+    patch: |-
+     - op: add
+       path: '/spec/configDaemonNodeSelector'
+       value: {"node-role.kubernetes.io/worker-cnf" : ""}
+     - op: replace
+       path: '/spec/enableInjector'
+       value: true
+     - op: replace
+       path: '/spec/enableOperatorWebhook'
+       value: true
+  - target:
+      kind: OperatorGroup
+      namespace: openshift-sriov-network-operator
+    patch: |-
+     - op: replace
+       path: '/metadata/name'
+       value: 'sriov-network-operators'
+  - target:
+      kind: PtpOperatorConfig
+      name: default
+    patch: |-
+     - op: replace
+       path: '/spec/daemonNodeSelector'
+       value: {"node-role.kubernetes.io/worker-cnf" : ""}
+     - op: replace
+       path: '/spec/ptpEventConfig/enableEventPublisher'
+       value: true
+     - op: replace
+       path: '/spec/ptpEventConfig/transportHost'
+       value: "amqp://amq-interconnect.openshift-ptp.svc.cluster.local"
+  - target:
+      kind: OperatorGroup
+      namespace: openshift-ptp
+    patch: |-
+     - op: replace
+       path: '/metadata/name'
+       value: 'ptp-operators'
